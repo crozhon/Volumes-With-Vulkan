@@ -47,5 +47,15 @@ void main()
 	const vec3 normal = (point - center) / radius;
 	const vec2 texCoord = GetSphereTexCoord(normal);
 
+
 	Ray = Scatter(material, gl_WorldRayDirectionNV, normal, texCoord, gl_HitTNV, Ray.RandomSeed);
+
+	const float sigma_t = 0.1;
+
+	const float prob_extinction = exp(- Ray.ColorAndDistance.w * sigma_t);
+
+	if (RandomFloat(Ray.RandomSeed) < (1 - prob_extinction)) {
+	    Ray.ScatterDirection.w = 0;
+		Ray.ColorAndDistance.rgb = vec3(1.0);
+	}
 }

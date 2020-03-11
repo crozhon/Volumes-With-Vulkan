@@ -24,13 +24,21 @@ namespace Assets
 		int Width() const { return width_; }
 		int Height() const { return height_; }
 
+		int Depth() const { return depth_; }
+
+		bool Is_Volume() const { return is_volume_; }
+
 	private:
 
-		Texture(int width, int height, int channels, unsigned char* pixels);
+		Texture(int width, int height, int channels, unsigned char* pixels, int depth=0);
 
 		Vulkan::SamplerConfig samplerConfig_;
 		int width_;
 		int height_;
+
+		int depth_; // Optional
+		bool is_volume_;
+
 		int channels_;
 		std::unique_ptr<unsigned char, void (*) (void*)> pixels_;
 	};

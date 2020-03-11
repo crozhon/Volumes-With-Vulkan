@@ -16,7 +16,7 @@ Options::Options(const int argc, const char* argv[])
 
 	options_description renderer("Renderer options");
 	renderer.add_options()
-		("samples", value<uint32_t>(&Samples)->default_value(8), "Set the number of ray samples per pixel.")
+		("samples", value<uint32_t>(&Samples)->default_value(1), "Set the number of ray samples per pixel.")
 		("bounces", value<uint32_t>(&Bounces)->default_value(16), "Set the maximum number of bounces per ray.")
 		("max-samples", value<uint32_t>(&MaxSamples)->default_value(64 * 1024), "Set the maximum number of accumulated ray samples per pixel.")
 		;
@@ -28,8 +28,8 @@ Options::Options(const int argc, const char* argv[])
 
 	options_description window("Window options");
 	window.add_options()
-		("width", value<uint32_t>(&Width)->default_value(1280), "Set framebuffer width.")
-		("height", value<uint32_t>(&Height)->default_value(720), "Set framebuffer height.")
+		("width", value<uint32_t>(&Width)->default_value(800), "Set framebuffer width.")
+		("height", value<uint32_t>(&Height)->default_value(600), "Set framebuffer height.")
 		("fullscreen", bool_switch(&Fullscreen)->default_value(false), "Toggle fullscreen vs windowed (default: windowed).")
 		("vsync", bool_switch(&VSync)->default_value(false), "Toggle vsync (default: vsync off).")
 		;

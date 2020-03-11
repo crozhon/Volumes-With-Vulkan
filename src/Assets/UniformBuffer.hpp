@@ -28,6 +28,7 @@ namespace Assets
 		uint32_t RandomSeed;
 		uint32_t GammaCorrection; // bool
 		uint32_t HasSky; // bool
+		float Sigma_t;
 	};
 
 	class UniformBuffer

@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-mkdir -p build
+#mkdir -p build
 cd build
-git clone https://github.com/Microsoft/vcpkg.git vcpkg.linux
+#git clone https://github.com/Microsoft/vcpkg.git vcpkg.linux
 cd vcpkg.linux
 git checkout 2019.12
 ./bootstrap-vcpkg.sh
