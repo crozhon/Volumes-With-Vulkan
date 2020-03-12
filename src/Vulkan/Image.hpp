@@ -3,6 +3,8 @@
 #include "Vulkan.hpp"
 #include "DeviceMemory.hpp"
 
+#include <variant>
+
 namespace Vulkan
 {
 	class Buffer;
@@ -18,12 +20,14 @@ namespace Vulkan
 		Image& operator = (Image&&) = delete;
 
 		Image(const Device& device, VkExtent2D extent, VkFormat format);
+		Image(const Device& device, VkExtent3D extent, VkFormat format);
 		Image(const Device& device, VkExtent2D extent, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
+		Image(const Device& device, VkExtent3D extent, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
 		Image(Image&& other) noexcept;
 		~Image();
 
 		const class Device& Device() const { return device_; }
-		VkExtent2D Extent() const { return extent_; }
+		VkExtent2D Extent() const { return std::get<VkExtent2D>(extent_); }
 		VkFormat Format() const { return format_; }
 
 		DeviceMemory AllocateMemory(VkMemoryPropertyFlags properties) const;
@@ -35,7 +39,7 @@ namespace Vulkan
 	private:
 
 		const class Device& device_;
-		const VkExtent2D extent_;
+		const std::variant<VkExtent2D, VkExtent3D> extent_;
 		const VkFormat format_;
 		VkImageLayout imageLayout_;
 

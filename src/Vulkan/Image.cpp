@@ -12,6 +12,12 @@ Image::Image(const class Device& device, const VkExtent2D extent, const VkFormat
 {
 }
 
+Image::Image(const class Device& device, const VkExtent3D extent, const VkFormat format) :
+	Image(device, extent, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+{
+}
+
+
 Image::Image(
 	const class Device& device, 
 	const VkExtent2D extent,
@@ -42,6 +48,38 @@ Image::Image(
 	Check(vkCreateImage(device.Handle(), &imageInfo, nullptr, &image_),
 		"create image");
 }
+
+Image::Image(
+	const class Device& device,
+	const VkExtent3D extent,
+	const VkFormat format,
+	const VkImageTiling tiling,
+	const VkImageUsageFlags usage) :
+	device_(device),
+	extent_(extent),
+	format_(format),
+	imageLayout_(VK_IMAGE_LAYOUT_UNDEFINED)
+{
+	VkImageCreateInfo imageInfo = {};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_3D;
+	imageInfo.extent.width = extent.width;
+	imageInfo.extent.height = extent.height;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = imageLayout_;
+	imageInfo.usage = usage;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.flags = 0; // Optional
+
+	Check(vkCreateImage(device.Handle(), &imageInfo, nullptr, &image_),
+		"create image");
+}
+
 
 Image::Image(Image&& other) noexcept :
 	device_(other.device_),
@@ -161,7 +199,11 @@ void Image::CopyFrom(CommandPool& commandPool, const Buffer& buffer)
 		region.imageSubresource.baseArrayLayer = 0;
 		region.imageSubresource.layerCount = 1;
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = { extent_.width, extent_.height, 1 };
+		if (extent_.index() == 0) {
+			region.imageExtent = { std::get<VkExtent2D>(extent_).width, std::get<VkExtent2D>(extent_).height, 1 };
+		} else {
+			region.imageExtent = { std::get<VkExtent3D>(extent_).width, std::get<VkExtent3D>(extent_).height, std::get<VkExtent3D>(extent_).depth };
+		}
 
 		vkCmdCopyBufferToImage(commandBuffer, buffer.Handle(), image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	});

@@ -28,9 +28,8 @@ namespace Assets
 
 		bool Is_Volume() const { return is_volume_; }
 
-	private:
-
 		Texture(int width, int height, int channels, unsigned char* pixels, int depth=0);
+	private:
 
 		Vulkan::SamplerConfig samplerConfig_;
 		int width_;

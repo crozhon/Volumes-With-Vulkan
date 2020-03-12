@@ -42,6 +42,28 @@ TextureImage::TextureImage(Vulkan::CommandPool& commandPool, const Texture& text
 
 		auto stagingBuffer = std::make_unique<Vulkan::Buffer>(device, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 		auto stagingBufferMemory = stagingBuffer->AllocateMemory(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		const auto data = stagingBufferMemory.Map(0, imageSize);
+		std::memcpy(data, texture.Pixels(), imageSize);
+		stagingBufferMemory.Unmap();
+
+		image_.reset(new Vulkan::Image(device,
+									   VkExtent3D{ static_cast<uint32_t>(texture.Width()), static_cast<uint32_t>(texture.Height()), static_cast<uint32_t>(texture.Depth()) },
+									   VK_FORMAT_R8_UNORM));
+		imageMemory_.reset(new Vulkan::DeviceMemory(image_->AllocateMemory(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)));
+		imageView_.reset(new Vulkan::ImageView(device, image_->Handle(), image_->Format(), VK_IMAGE_ASPECT_COLOR_BIT));
+
+		auto sampler_config = Vulkan::SamplerConfig();
+		sampler_config.MaxAnisotropy = 1.0f;
+		sampler_config.BorderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		sampler_.reset(new Vulkan::Sampler(device, sampler_config));
+
+		image_->TransitionImageLayout(commandPool, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		image_->CopyFrom(commandPool, *stagingBuffer);
+		image_->TransitionImageLayout(commandPool, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		// Delete the buffer before the memory
+		stagingBuffer.reset();
 	}
 }
 

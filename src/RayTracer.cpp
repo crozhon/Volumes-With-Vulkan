@@ -243,6 +243,11 @@ void RayTracer::LoadScene(const uint32_t sceneIndex)
 	{
 		textures.push_back(Assets::Texture::LoadTexture("../assets/textures/white.png", Vulkan::SamplerConfig()));
 	}
+
+	// Add a volume texture
+	//unsigned char* const pixels = new unsigned char[256 * 256 * 1 * 256];
+	//auto tex = Assets::Texture(256, 256, 1, pixels, 256);
+	//textures.push_back(Assets::Texture(256, 256, 1, pixels, 256));
 	
 	scene_.reset(new Assets::Scene(CommandPool(), std::move(models), std::move(textures), true));
 	sceneIndex_ = sceneIndex;
