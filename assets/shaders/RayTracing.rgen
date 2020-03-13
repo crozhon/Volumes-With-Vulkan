@@ -59,7 +59,8 @@ void main()
 			}
 
 			// Trace hit.
-			origin = origin + t * direction;
+			//origin = origin + t * direction;
+            origin = vec4(Ray.ScatterOrigin, 1);
 			direction = vec4(Ray.ScatterDirection.xyz, 0);
 		}
 

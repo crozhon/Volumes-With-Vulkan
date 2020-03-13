@@ -25,10 +25,12 @@ namespace Assets
 		TextureImage& operator = (TextureImage&&) = delete;
 
 		TextureImage(Vulkan::CommandPool& commandPool, const Texture& texture);
+		void Reload(Vulkan::CommandPool& commandPool, const unsigned char* pixels);
 		~TextureImage();
 
 		const Vulkan::ImageView& ImageView() const { return *imageView_; }
 		const Vulkan::Sampler& Sampler() const { return *sampler_; }
+		const Vulkan::Image& Image() const { return *image_; }
 
 	private:
 

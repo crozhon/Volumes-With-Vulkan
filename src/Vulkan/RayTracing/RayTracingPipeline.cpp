@@ -50,7 +50,9 @@ RayTracingPipeline::RayTracingPipeline(
 		{8, static_cast<uint32_t>(scene.TextureSamplers().size()), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV},
 
 		// The Procedural buffer.
-		{9, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV | VK_SHADER_STAGE_INTERSECTION_BIT_NV}
+		{9, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV | VK_SHADER_STAGE_INTERSECTION_BIT_NV},
+
+		{10, static_cast<uint32_t>(scene.VolumeSamplers().size()), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV}
 	};
 
 	descriptorSetManager_.reset(new DescriptorSetManager(device, descriptorBindings, uniformBuffers.size()));
@@ -104,6 +106,7 @@ RayTracingPipeline::RayTracingPipeline(
 
 		// Image and texture samplers.
 		std::vector<VkDescriptorImageInfo> imageInfos(scene.TextureSamplers().size());
+		std::vector<VkDescriptorImageInfo> volumeInfos(scene.VolumeSamplers().size());
 
 		for (size_t t = 0; t != imageInfos.size(); ++t)
 		{
@@ -111,6 +114,13 @@ RayTracingPipeline::RayTracingPipeline(
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.imageView = scene.TextureImageViews()[t];
 			imageInfo.sampler = scene.TextureSamplers()[t];
+		}
+
+		for (size_t t = 0; t != volumeInfos.size(); ++t) {
+			auto& volumeInfo = volumeInfos[t];
+			volumeInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			volumeInfo.imageView = scene.VolumeImageViews()[t];
+			volumeInfo.sampler = scene.VolumeSamplers()[t];
 		}
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites =
@@ -123,7 +133,8 @@ RayTracingPipeline::RayTracingPipeline(
 			descriptorSets.Bind(i, 5, indexBufferInfo),
 			descriptorSets.Bind(i, 6, materialBufferInfo),
 			descriptorSets.Bind(i, 7, offsetsBufferInfo),
-			descriptorSets.Bind(i, 8, *imageInfos.data(), static_cast<uint32_t>(imageInfos.size()))
+			descriptorSets.Bind(i, 8, *imageInfos.data(), static_cast<uint32_t>(imageInfos.size())),
+			descriptorSets.Bind(i, 10, *volumeInfos.data(), static_cast<uint32_t>(volumeInfos.size()))
 		};
 
 		// Procedural buffer (optional)

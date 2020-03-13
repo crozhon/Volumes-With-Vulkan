@@ -162,7 +162,10 @@ if (UNIX)
 	set(extra_libs -lbacktrace -lstdc++fs)
 endif()
 
+find_package(OpenMP)
+
 set_target_properties(${exe_name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 target_link_libraries(${exe_name} PRIVATE ${Boost_LIBRARIES} glfw imgui::imgui ${Vulkan_LIBRARIES} ${extra_libs})
+target_link_libraries(${exe_name} PUBLIC OpenMP::OpenMP_CXX)
 add_dependencies(${exe_name} Assets)
 

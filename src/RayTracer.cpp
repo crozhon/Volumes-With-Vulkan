@@ -10,6 +10,7 @@
 #include "Vulkan/Device.hpp"
 #include "Vulkan/SwapChain.hpp"
 #include "Vulkan/Window.hpp"
+#include "Perlin.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -102,6 +103,8 @@ void RayTracer::DrawFrame()
 		CreateSwapChain();
 		return;
 	}
+
+	//ReloadVolumes();
 
 	// Check if the accumulation buffer needs to be reset.
 	if (resetAccumulation_ || 
@@ -244,12 +247,58 @@ void RayTracer::LoadScene(const uint32_t sceneIndex)
 		textures.push_back(Assets::Texture::LoadTexture("../assets/textures/white.png", Vulkan::SamplerConfig()));
 	}
 
+	const uint32_t volWidth = 128;
+	const uint32_t volHeight = 128;
+	const uint32_t volDepth = 128;
+
+	const uint32_t volMemSize = volWidth * volHeight * volDepth;
 	// Add a volume texture
-	//unsigned char* const pixels = new unsigned char[256 * 256 * 1 * 256];
+	unsigned char* const pixels = new unsigned char[volWidth * volHeight * volDepth * 1];
+	std::vector<Assets::Texture> volumes;
 	//auto tex = Assets::Texture(256, 256, 1, pixels, 256);
-	//textures.push_back(Assets::Texture(256, 256, 1, pixels, 256));
-	
-	scene_.reset(new Assets::Scene(CommandPool(), std::move(models), std::move(textures), true));
+	//pixels[0] = 0.1f;
+	//for (int i = 0; i < 128 * 128 * 128; i++) {
+	//	pixels[i] = 0.005f * 255;
+	//}
+
+	memset(pixels, 0, volMemSize);
+
+	PerlinNoise<float> perlinNoise;
+	FractalNoise<float> fractalNoise(perlinNoise);
+
+	const float noiseScale = static_cast<float>(rand() % 10) + 4.0f;
+
+	for (uint32_t z = 0; z < volDepth; z++)
+	{
+		for (uint32_t y = 0; y < volHeight; y++)
+		{
+			for (uint32_t x = 0; x < volWidth; x++)
+			{
+				float nx = (float)x / (float)volWidth;
+				float ny = (float)y / (float)volHeight;
+				float nz = (float)z / (float)volDepth;
+
+				float n = fractalNoise.noise(nx * noiseScale, ny * noiseScale, nz * noiseScale);
+
+				n = (n - floor(n));
+				//std::cout << n << std::endl;
+				//
+				if (n * 255 < 128) {
+					n = 0;
+				}
+
+				pixels[x + y * volWidth + z * volWidth * volHeight] = static_cast<uint8_t>(floor(n * 255));
+				//if (x > 60 && x < 70 && y > 60 && y < 70 && z > 60 && z < 70) {
+				//	pixels[x + y * volWidth + z * volWidth * volHeight] = static_cast<uint8_t>(floor(255));
+				//}
+			}
+		}
+	}
+
+	volumes.push_back(Assets::Texture(128, 128, 1, pixels, 128));
+
+
+	scene_.reset(new Assets::Scene(CommandPool(), std::move(models), std::move(textures), std::move(volumes), true));
 	sceneIndex_ = sceneIndex;
 
 	userSettings_.FieldOfView = cameraInitialSate_.FieldOfView;
@@ -262,6 +311,53 @@ void RayTracer::LoadScene(const uint32_t sceneIndex)
 
 	periodTotalFrames_ = 0;
 	resetAccumulation_ = true;
+}
+
+void RayTracer::ReloadVolumes()
+{
+	const uint32_t volWidth = 128;
+	const uint32_t volHeight = 128;
+	const uint32_t volDepth = 128;
+
+	const uint32_t volMemSize = volWidth * volHeight * volDepth;
+	// Add a volume texture
+
+	unsigned char* const pixels = new unsigned char[volWidth * volHeight * volDepth * 1];
+	memset(pixels, 0, volMemSize);
+
+	PerlinNoise<float> perlinNoise;
+	FractalNoise<float> fractalNoise(perlinNoise);
+
+	const float noiseScale = static_cast<float>(rand() % 10) + 4.0f;
+
+#pragma omp parallel for
+	for (uint32_t z = 0; z < volDepth; z++)
+	{
+		for (uint32_t y = 0; y < volHeight; y++)
+		{
+			for (uint32_t x = 0; x < volWidth; x++)
+			{
+				float nx = (float)x / (float)volWidth;
+				float ny = (float)y / (float)volHeight;
+				float nz = (float)z / (float)volDepth;
+
+				float n = fractalNoise.noise(nx * noiseScale, ny * noiseScale, nz * noiseScale);
+
+				n = (n - floor(n));
+				//std::cout << n << std::endl;
+
+				pixels[x + y * volWidth + z * volWidth * volHeight] = static_cast<uint8_t>(floor(n * 255));
+			}
+		}
+	}
+
+	//auto tex = Assets::Texture(256, 256, 1, pixels, 256);
+	//pixels[0] = 0.1f;
+	//for (int i = 0; i < 128 * 128 * 128; i++) {
+	//	pixels[i] = 0.005f * 255;
+	//}
+
+	delete[] pixels;
 }
 
 void RayTracer::CheckAndUpdateBenchmarkState(double prevTime)

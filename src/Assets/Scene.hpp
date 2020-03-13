@@ -27,7 +27,7 @@ namespace Assets
 		Scene& operator = (const Scene&) = delete;
 		Scene& operator = (Scene&&) = delete;
 
-		Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures, bool usedForRayTracing);
+		Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures, std::vector<Texture>&& volumes, bool usedForRayTracing);
 		~Scene();
 
 		const std::vector<Model>& Models() const { return models_; }
@@ -40,12 +40,17 @@ namespace Assets
 		const Vulkan::Buffer& AabbBuffer() const { return *aabbBuffer_; }
 		const Vulkan::Buffer& ProceduralBuffer() const { return *proceduralBuffer_; }
 		const std::vector<VkImageView> TextureImageViews() const { return textureImageViewHandles_; }
+		const std::vector<VkImageView> VolumeImageViews() const { return volumeImageViewHandles_; }
 		const std::vector<VkSampler> TextureSamplers() const { return textureSamplerHandles_; }
+		const std::vector<VkSampler> VolumeSamplers() const { return volumeSamplerHandles_; }
+
+		const std::vector<std::unique_ptr<TextureImage>>& VolumeImages() const { return volumeImages_; }
 
 	private:
 
 		const std::vector<Model> models_;
 		const std::vector<Texture> textures_;
+		const std::vector<Texture> volumes_;
 
 		std::unique_ptr<Vulkan::Buffer> vertexBuffer_;
 		std::unique_ptr<Vulkan::DeviceMemory> vertexBufferMemory_;
@@ -68,6 +73,11 @@ namespace Assets
 		std::vector<std::unique_ptr<TextureImage>> textureImages_;
 		std::vector<VkImageView> textureImageViewHandles_;
 		std::vector<VkSampler> textureSamplerHandles_;
+
+		std::vector<std::unique_ptr<TextureImage>> volumeImages_;
+		std::vector<VkImageView> volumeImageViewHandles_;
+		std::vector<VkSampler> volumeSamplerHandles_;
+
 	};
 
 }

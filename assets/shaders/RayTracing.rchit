@@ -8,7 +8,10 @@ layout(binding = 4) readonly buffer VertexArray { float Vertices[]; };
 layout(binding = 5) readonly buffer IndexArray { uint Indices[]; };
 layout(binding = 6) readonly buffer MaterialArray { Material[] Materials; };
 layout(binding = 7) readonly buffer OffsetArray { uvec2[] Offsets; };
+
 layout(binding = 8) uniform sampler2D[] TextureSamplers;
+
+layout(binding = 10) uniform sampler3D[] VolumeSamplers;
 
 #include "Scatter.glsl"
 #include "Vertex.glsl"

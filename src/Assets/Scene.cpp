@@ -56,9 +56,10 @@ namespace
 
 }
 
-Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures, bool usedForRayTracing) :
+Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures, std::vector<Texture>&& volumes, bool usedForRayTracing) :
 	models_(std::move(models)),
-	textures_(std::move(textures))
+	textures_(std::move(textures)),
+	volumes_(std::move(volumes))
 {
 	// Concatenate all the models
 	std::vector<Vertex> vertices;
@@ -116,12 +117,27 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std:
 	textureImages_.reserve(textures_.size());
 	textureImageViewHandles_.resize(textures_.size());
 	textureSamplerHandles_.resize(textures_.size());
+
+	volumeImages_.reserve(volumes_.size());
+	volumeImageViewHandles_.resize(volumes_.size());
+	volumeSamplerHandles_.resize(volumes_.size());
 	
 	for (size_t i = 0; i != textures_.size(); ++i)
 	{
-		textureImages_.emplace_back(new TextureImage(commandPool, textures_[i]));
-		textureImageViewHandles_[i] = textureImages_[i]->ImageView().Handle();
-		textureSamplerHandles_[i] = textureImages_[i]->Sampler().Handle();
+		if (textures_[i].Is_Volume()) {
+			//volumeSamplerHandles_.push_back(textureImages_[i]->Sampler().Handle());
+		} else {
+			textureImages_.emplace_back(new TextureImage(commandPool, textures_[i]));
+			textureImageViewHandles_[i] = textureImages_[i]->ImageView().Handle();
+			textureSamplerHandles_[i] = textureImages_[i]->Sampler().Handle();
+		}
+	}
+
+	for (size_t i = 0; i != volumes_.size(); ++i)
+	{
+		volumeImages_.emplace_back(new TextureImage(commandPool, volumes_[i]));
+		volumeImageViewHandles_[i] = volumeImages_[i]->ImageView().Handle();
+		volumeSamplerHandles_[i] = volumeImages_[i]->Sampler().Handle();
 	}
 }
 
